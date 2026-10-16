@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Social Follow Card Maker</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+:root{--bg:#f3f1ee;--surface:#fff;--text:#1c1c1e;--muted:#6b6b70;--line:#dcd9d4;--accent:#7a3cff;--on:#fff;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121317;--surface:#1c1e23;--text:#f1f0ee;--muted:#a3a3a8;--line:#33363c;--accent:#a98aff;--on:#160b33}}
+:root[data-theme="dark"]{--bg:#121317;--surface:#1c1e23;--text:#f1f0ee;--muted:#a3a3a8;--line:#33363c;--accent:#a98aff;--on:#160b33}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Sora',system-ui,sans-serif;line-height:1.5}
+main{max-width:980px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:1.45rem;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 22px;font-size:.92rem}
+.grid{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:26px;align-items:start}
+@media(max-width:780px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+label,.lb{display:block;font-size:.85rem;font-weight:600;margin:14px 0 6px}
+.lb:first-child{margin-top:0}
+input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:.92rem}
+input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:.78rem;color:var(--muted);margin-top:5px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg button{padding:10px 4px;font-size:.82rem;border:1px solid var(--line);background:transparent;color:var(--text)}
+.seg button[aria-pressed=true]{border-color:var(--accent);background:var(--accent);color:var(--on)}
+.btns{display:grid;gap:10px;margin-top:20px}
+button{border:1px solid var(--accent);border-radius:10px;background:transparent;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:12px}
+button.main{background:var(--accent);color:var(--on)}
+.msg{min-height:1.3em;font-size:.82rem;color:var(--muted);margin-top:10px}
+.cards{display:flex;gap:22px;flex-wrap:wrap;justify-content:center}
+figure{margin:0;flex:1 1 220px;max-width:300px}
+figcaption{font-size:.8rem;color:var(--muted);margin-bottom:8px}
+figure img{display:block;width:100%;height:auto;filter:drop-shadow(0 12px 22px rgba(0,0,0,.3))}
+.note{font-size:.82rem;color:var(--muted);margin:22px 0 0;max-width:620px}
+</style>
+</head>
+<body>
+<main>
+<h1>Social Follow Card Maker</h1>
+<p class="sub">Pick a platform, add the business name and handle. Tap with NFC or scan the QR, and the profile opens.</p>
+<div class="grid">
+ <section class="panel" aria-label="Card details">
+  <div class="lb" id="pl">Platform</div>
+  <div class="seg" role="group" aria-labelledby="pl" id="seg"></div>
+  <label for="name">Business name</label>
+  <input id="name" type="text" value="Sharma Dental Clinic" maxlength="38" autocomplete="off">
+  <label for="handle">Handle or page name</label>
+  <input id="handle" type="text" value="sharmadental" maxlength="40" autocomplete="off">
+  <label for="link">Profile link</label>
+  <input id="link" type="url" autocomplete="off">
+  <div class="hint">Filled in from the handle. Edit it if the profile link is different. The QR and the NFC sticker should use this same link.</div>
+  <div class="btns">
+   <button class="main" id="both" type="button">Download front and back</button>
+   <button id="dfront" type="button">Download front</button>
+   <button id="dback" type="button">Download back</button>
+  </div>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+ </section>
+ <section aria-label="Card preview">
+  <div class="cards">
+   <figure><figcaption>Front</figcaption><img id="pf" alt="Front of the follow card"></figure>
+   <figure><figcaption>Back</figcaption><img id="pb" alt="Back of the follow card with QR code"></figure>
+  </div>
+  <p class="note">PNG files, 1080 × 1712 px, in the standard card proportion (54 × 85.6 mm). Place the NFC sticker behind the contactless waves on the front. Test a tap and a scan before you print a batch.</p>
+ </section>
+</div>
+</main>
+<script>
+(function(){
+var W=540,H=856,S=2,$=function(i){return document.getElementById(i)};
+var FF='Sora,"Segoe UI",system-ui,sans-serif';
+var P={
+ ig:{n:"Instagram",st:["#feda75","#fa7e1e","#d62976","#962fbf","#4f5bd5"],rgb:"214,41,118",ac:"#ff7ab8"},
+ fb:{n:"Facebook",st:["#6db0ff","#1877f2","#0a4bc4"],rgb:"24,119,242",ac:"#7ab6ff"},
+ yt:{n:"YouTube",st:["#ff6b6b","#ff0000","#b30000"],rgb:"255,0,0",ac:"#ff7a7a"}};
+var cur="ig",edited=false,fc,bc,dl=null;
+
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function mk(){var cv=document.createElement("canvas");cv.width=W*S;cv.height=H*S;var c=cv.getContext("2d");c.scale(S,S);return [cv,c]}
+function lg(c,x0,y0,x1,y1,st){var g=c.createLinearGradient(x0,y0,x1,y1);st.forEach(function(s,i){g.addColorStop(i/(st.length-1),s)});return g}
+function glow(c,x,y,r,rgb,a){var g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,"rgba("+rgb+","+a+")");g.addColorStop(1,"rgba("+rgb+",0)");c.fillStyle=g;c.fillRect(0,0,W,H)}
+function bg(c,p){c.save();rr(c,0,0,W,H,40);c.clip();c.fillStyle=lg(c,0,0,W,H,["#09090f","#161624"]);c.fillRect(0,0,W,H);
+ glow(c,70,150,380,p.rgb,.38);glow(c,500,780,430,p.rgb,.3);
+ c.strokeStyle="rgba(255,255,255,.14)";c.lineWidth=1.5;rr(c,10,10,W-20,H-20,32);c.stroke()}
+function tx(c,t,x,y,font,col,al){c.font=font;c.fillStyle=col;c.textAlign=al||"center";c.textBaseline="alphabetic";c.fillText(t,x,y)}
+function fit(c,t,w,wt,max,min){var s=max;while(s>min){c.font=wt+" "+s+"px "+FF;if(c.measureText(t).width<=w)break;s--}return wt+" "+s+"px "+FF}
+function ls(c,v){if("letterSpacing" in c)c.letterSpacing=v}
+function waves(c,x,y,sc,col,lw){c.save();c.strokeStyle=col;c.lineWidth=lw;c.lineCap="round";[12,22,32].forEach(function(r){c.beginPath();c.arc(x,y,r*sc,-.75,.75);c.stroke()});c.restore()}
+function icon(c,k,cx,cy,r,p){
+ c.beginPath();c.arc(cx,cy,r,0,7);c.fillStyle=lg(c,cx-r,cy+r,cx+r,cy-r,p.st);c.fill();
+ c.save();c.strokeStyle="#fff";c.fillStyle="#fff";c.lineCap="round";c.lineJoin="round";
+ if(k==="ig"){var s=r;c.lineWidth=r*.1;rr(c,cx-s*.5,cy-s*.5,s,s,s*.28);c.stroke();c.beginPath();c.arc(cx,cy,s*.22,0,7);c.stroke();c.beginPath();c.arc(cx+s*.3,cy-s*.3,s*.05,0,7);c.fill()}
+ else if(k==="fb"){c.font="800 "+(r*1.55)+"px "+FF;c.textAlign="center";c.textBaseline="alphabetic";c.fillText("f",cx+r*.08,cy+r*.62)}
+ else{var w=r*1.2,h=r*.84;rr(c,cx-w/2,cy-h/2,w,h,h*.3);c.fill();c.beginPath();c.moveTo(cx-h*.14,cy-h*.24);c.lineTo(cx+h*.26,cy);c.lineTo(cx-h*.14,cy+h*.24);c.closePath();c.fillStyle=p.st[1];c.fill()}
+ c.restore()}
+function qr(c,x,y,size,link){try{var q=qrcode(0,"M");q.addData(link);q.make();var n=q.getModuleCount(),cs=size/n;c.fillStyle="#000";for(var r=0;r<n;r++)for(var k=0;k<n;k++)if(q.isDark(r,k))c.fillRect(x+k*cs,y+r*cs,cs+.4,cs+.4)}catch(e){tx(c,"Link too long",x+size/2,y+size/2,"600 16px "+FF,"#000")}}
+function phone(c,cx,cy,mode){c.save();c.strokeStyle="#fff";c.lineWidth=3;c.lineCap="round";rr(c,cx-22,cy-37,44,74,8);c.stroke();c.beginPath();c.moveTo(cx-6,cy-29);c.lineTo(cx+6,cy-29);c.stroke();
+ if(mode==="nfc"){c.lineWidth=2.6;[8,15,22].forEach(function(r){c.beginPath();c.arc(cx,cy+16,r,-2.25,-.89);c.stroke()})}
+ else{c.lineWidth=2.4;[[-13,-18],[3,-18],[-13,-2]].forEach(function(q){rr(c,cx+q[0],cy+q[1],10,10,2);c.stroke()});c.fillStyle="#fff";c.fillRect(cx+4,cy-1,4,4);c.fillRect(cx-8,cy+14,5,5);c.fillRect(cx+2,cy+14,5,5);c.fillRect(cx+10,cy+8,4,4)}
+ c.restore()}
+function disp(k,h){return k==="fb"?"facebook.com/"+h:"@"+h}
+function pill(c,t,yc,p){c.font=fit(c,t,380,"700",28,14);var w=c.measureText(t).width+60;
+ rr(c,W/2-w/2,yc-29,w,58,29);c.fillStyle="rgba(255,255,255,.07)";c.fill();c.strokeStyle="rgba(255,255,255,.24)";c.lineWidth=1.5;c.stroke();
+ tx(c,t,W/2,yc+10,c.font,"#fff")}
+
+function front(k,name,h){var p=P[k],a=mk(),c=a[1];bg(c,p);var U=name.toUpperCase();
+ ls(c,"2px");tx(c,U,W/2,76,fit(c,U,430,"600",22,12),"#a3adc2");
+ ls(c,"4px");tx(c,"FOLLOW US ON",W/2,170,"600 18px "+FF,p.ac);ls(c,"0px");
+ c.font="800 72px "+FF;var tw=c.measureText(p.n).width;tx(c,p.n,W/2,246,"800 72px "+FF,lg(c,W/2-tw/2,0,W/2+tw/2,0,p.st));
+ c.lineWidth=2;c.strokeStyle="rgba("+p.rgb+",.4)";c.beginPath();c.arc(W/2,458,142,0,7);c.stroke();
+ c.lineWidth=1.2;c.strokeStyle="rgba("+p.rgb+",.22)";c.beginPath();c.arc(W/2,458,166,0,7);c.stroke();
+ icon(c,k,W/2,458,118,p);
+ pill(c,disp(k,h),640,p);
+ waves(c,200,724,.75,"#fff",4);tx(c,"Tap your phone to follow",232,732,"500 22px "+FF,"#d3d9e6","left");
+ c.fillStyle=lg(c,0,0,W,0,p.st);c.fillRect(0,H-20,W,20);
+ c.restore();return a[0]}
+
+function back(k,name,h,link){var p=P[k],a=mk(),c=a[1];bg(c,p);
+ tx(c,name,50,88,fit(c,name,340,"800",40,16),"#fff","left");waves(c,452,68,.8,"#fff",4);
+ tx(c,"Scan to follow",W/2,196,"700 32px "+FF,"#fff");
+ tx(c,"Offers, updates and stories",W/2,232,"500 19px "+FF,"#a3adc2");
+ rr(c,138,262,264,264,26);c.fillStyle=lg(c,138,526,402,262,p.st);c.fill();
+ rr(c,146,270,248,248,19);c.fillStyle="#fff";c.fill();qr(c,168,292,204,link);
+ pill(c,disp(k,h),590,p);
+ tx(c,"Tap",64,726,"600 26px "+FF,"#fff","left");phone(c,170,712,"nfc");
+ tx(c,"or",W/2,724,"500 24px "+FF,"#a3adc2");phone(c,372,712,"qr");tx(c,"Scan",430,726,"600 26px "+FF,"#fff","left");
+ tx(c,"NFC",170,766,"600 13px "+FF,"#a3adc2");
+ ls(c,"2px");tx(c,"FOLLOW US ON "+p.n.toUpperCase(),W/2,818,"600 14px "+FF,p.ac);ls(c,"0px");
+ c.fillStyle=lg(c,0,0,W,0,p.st);c.fillRect(0,H-20,W,20);
+ c.restore();return a[0]}
+
+function clean(h){return h.trim().replace(/^@+/,"").replace(/^https?:\/\/[^\/]+\/@?/,"").replace(/[\s\/]+/g,"")}
+function auto(){var h=clean($("handle").value)||"yourhandle";return cur==="ig"?"https://instagram.com/"+h:cur==="fb"?"https://facebook.com/"+h:"https://youtube.com/@"+h}
+function render(){var n=$("name").value.trim()||"Your Business",h=clean($("handle").value)||"yourhandle",l=$("link").value.trim()||auto();
+ fc=front(cur,n,h);bc=back(cur,n,h,l);$("pf").src=fc.toDataURL("image/png");$("pb").src=bc.toDataURL("image/png")}
+function sync(){if(!edited)$("link").value=auto();render()}
+function slug(){return(($("name").value.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""))||"follow-card")+"-"+cur}
+function msg(t){$("msg").textContent=t}
+function blob(cv){return new Promise(function(r){cv.toBlob(r,"image/png")})}
+async function save(which){
+ if(!dl){msg("Saving isn't available in this view. Press and hold a card image to save it instead.");return}
+ var list=which==="both"?["front","back"]:[which];
+ for(var i=0;i<list.length;i++){var k=list[i];
+  try{await dl.save({filename:slug()+"-"+k+".png",data:await blob(k==="front"?fc:bc)})}
+  catch(e){msg(e&&e.code==="declined"?"Download cancelled.":"Could not save: "+((e&&e.message)||"unknown error"));return}}
+ msg("Saved.")}
+
+var seg=$("seg");
+Object.keys(P).forEach(function(k){var b=document.createElement("button");b.type="button";b.textContent=P[k].n;b.setAttribute("aria-pressed",k===cur);
+ b.onclick=function(){cur=k;edited=false;[].forEach.call(seg.children,function(x){x.setAttribute("aria-pressed","false")});b.setAttribute("aria-pressed","true");sync()};seg.appendChild(b)});
+$("name").addEventListener("input",render);
+$("handle").addEventListener("input",sync);
+$("link").addEventListener("input",function(){edited=this.value.trim()!==""&&this.value.trim()!==auto();render()});
+$("both").onclick=function(){save("both")};$("dfront").onclick=function(){save("front")};$("dback").onclick=function(){save("back")};
+sync();
+if(document.fonts&&document.fonts.load){Promise.all(["500","600","700","800"].map(function(w){return document.fonts.load(w+" 24px Sora")})).then(render).catch(function(){})}
+try{if(window.claude&&claude.use){claude.use("downloads").then(function(d){dl=d}).catch(function(){})}}catch(e){}
+})();
+</script>
+</body>
+</html>
